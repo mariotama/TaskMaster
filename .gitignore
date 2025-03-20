@@ -1,0 +1,21 @@
+# Ignorar node_modules (dependencias de npm)
+node_modules/
+
+# Ignorar la carpeta de compilación de NestJS
+dist/
+
+# Ignorar archivos de entorno
+.env
+
+# Ignorar logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ignorar lock files si no deseas versionarlos
+package-lock.json
+
+# Ignorar archivos de cache de TypeScript
+*.tsbuildinfo
