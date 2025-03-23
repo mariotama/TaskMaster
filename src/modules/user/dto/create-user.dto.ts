@@ -24,6 +24,13 @@ export class CreateUserDto {
   username: string;
 
   @IsString()
+  @MinLength(6, {
+    message: 'Password must be 6 characters or longer',
+  })
+  @IsNotEmpty({ message: 'Passsword is requried' })
+  password: string;
+
+  @IsString()
   @IsOptional()
   profileImageUrl?: string;
 

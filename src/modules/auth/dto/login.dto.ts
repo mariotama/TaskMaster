@@ -11,4 +11,11 @@ export class LoginDto {
   })
   @IsNotEmpty({ message: 'El nombre de usuario es obligatorio' })
   username: string;
+
+  @IsString()
+  @MinLength(6, {
+    message: 'La contraseña debe contener al menos 6 carácteres ',
+  })
+  @IsNotEmpty({ message: 'La contraseña es obligatoria' })
+  password: string;
 }
