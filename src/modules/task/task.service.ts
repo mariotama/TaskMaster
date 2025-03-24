@@ -1,13 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from './entities/task.entity';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { TaskCompletion } from './entities/task-completion.entity';
 import { User } from '../user/entities/user.entity';
 import { ProgressionService } from 'src/common/progression/progression.service';
 import { WalletService } from '../wallet/wallet.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { TaskType } from 'src/shared/enums/task-type.enum';
+import { UpdateTaskDto } from './dto/update-task.dto';
+import { ProgressionResult } from 'src/shared/interfaces/progression-result.interface';
 
 /**
  * Service for user's task handling
@@ -98,5 +104,188 @@ export class TaskService {
     }
 
     return task;
+  }
+
+  /**
+   * Updates an existing task
+   * @param id task id
+   * @param userId user id
+   * @param updateTaskDto data to update
+   * @returns updated task
+   */
+  async update(
+    id: number,
+    userId: number,
+    updateTaskDto: UpdateTaskDto,
+  ): Promise<Task> {
+    // Verify that the task exists and belongs to user
+    const task = await this.findOne(id, userId);
+
+    // Update fields
+    Object.assign(task, updateTaskDto);
+
+    return this.taskRepository.save(task);
+  }
+
+  /**
+   * Delete task
+   * @param id task id
+   * @param userId user id
+   * @returns true if deleted
+   */
+  async remove(id: number, userId: number): Promise<boolean> {
+    // Verify that the task exists and belongs to user
+    await this.findOne(id, userId);
+
+    const result = await this.taskRepository.delete(id);
+
+    return (result.affected ?? 0) > 0;
+  }
+
+  /**
+   * Mark task as completed and give rewards
+   * @param id task id
+   * @param userId user id
+   * @returns result of XP progression and coins gained
+   */
+  async completeTask(id: number, userId: number): Promise<ProgressionResult> {
+    // Verify that the task exists and belongs to user
+    const task = await this.findOne(id, userId);
+
+    // Validate that the task isn't already completed
+    if (task.isCompleted && task.type === TaskType.MISSION) {
+      throw new BadRequestException('This task is already completed');
+    }
+
+    // If DAILY, verify if it was completed TODAY
+    if (task.type === TaskType.DAILY) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const completedToday = await this.taskCompletionRepository.findOne({
+        where: {
+          task: { id },
+          user: { id: userId },
+          completedAt: MoreThan(today),
+        },
+      });
+
+      if (completedToday) {
+        throw new BadRequestException('This task was already completed today');
+      }
+    }
+
+    // Register completed
+    const completion = this.taskCompletionRepository.create({
+      task: { id },
+      user: { id: userId },
+      xpEarned: task.xpReward,
+      coinsEarned: task.coinReward,
+    });
+
+    await this.taskCompletionRepository.save(completion);
+
+    // Mark as completed (only for missions)
+    if (task.type === TaskType.MISSION) {
+      task.isCompleted = true;
+      await this.taskRepository.save(task);
+    }
+
+    // Give XP and coins
+    const progressionResult =
+      await this.progressionService.addExperienceAndCoins(
+        userId,
+        task.xpReward,
+        task.coinReward,
+        `Task completed: ${task.title}`,
+      );
+
+    return progressionResult;
+  }
+
+  /**
+   * TODO
+   * Reinicia las tareas diarias para todos los usuarios
+   * Este método debería ejecutarse por un cron job diariamente
+   */
+  // async resetDailyTasks(): Promise<void> {
+  // Para tareas diarias, solo marcamos las completiones
+  // No modificamos el estado de isCompleted para mantener historial
+
+  // Este método puede ser llamado por un cron job configurado en el módulo
+  //console.log('Tareas diarias reiniciadas para todos los usuarios');
+  //}
+
+  /**
+   * Obtains historic task completion
+   * @param userId user id
+   * @param page page number
+   * @param limit elements per page
+   * @returns paged completion historic
+   */
+  async getCompletionHistory(
+    userId: number,
+    page = 1,
+    limit = 10,
+  ): Promise<{ completions: TaskCompletion[]; total: number }> {
+    const [completions, total] =
+      await this.taskCompletionRepository.findAndCount({
+        where: { user: { id: userId } },
+        relations: ['task'],
+        order: { completedAt: 'DESC' },
+        skip: (page - 1) * limit,
+        take: limit,
+      });
+
+    return { completions, total };
+  }
+
+  /**
+   * Obtain stats of completed tasks
+   * @param userId user id
+   * @returns task stats
+   */
+  async getTaskStatistics(userId: number): Promise<{
+    totalCompleted: number;
+    dailyCompleted: number;
+    missionsCompleted: number;
+    streakDays: number;
+  }> {
+    // Total count of completed tasks
+    const totalCompleted = await this.taskCompletionRepository.count({
+      where: { user: { id: userId } },
+    });
+
+    // Total count of completed missions
+    const missionsCompleted = await this.taskRepository.count({
+      where: {
+        user: { id: userId },
+        type: TaskType.MISSION,
+        isCompleted: true,
+      },
+    });
+
+    // Total count of DAILY tasks
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const dailyCompletions = await this.taskCompletionRepository
+      .createQueryBuilder('completion')
+      .innerJoin('completion.task', 'task')
+      .where('completion.user_id = :userId', { userId })
+      .andWhere('task.type = :type', { type: TaskType.DAILY })
+      .andWhere('completion.completedAt > :date', { date: thirtyDaysAgo })
+      .getCount();
+
+    // Calculate streak
+    // More complex
+    const streakDays = 0; // Placeholder
+
+    return {
+      totalCompleted,
+      dailyCompleted: dailyCompletions,
+      missionsCompleted,
+      streakDays,
+    };
   }
 }
