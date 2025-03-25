@@ -10,7 +10,7 @@ import { JwtPayload } from 'src/shared/interfaces/user.interface';
  * Verify and validate JWT tokens in petitions
  */
 @Injectable()
-export class JwTStrategy extends PassportStrategy(Strategy) {
+export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private configService: ConfigService,
     private authService: AuthService,
