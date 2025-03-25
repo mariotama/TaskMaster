@@ -7,20 +7,22 @@ import { UserModule } from '../user/user.module';
 import { WalletModule } from '../wallet/wallet.module';
 import { TaskModule } from '../task/task.module';
 import { ShopModule } from '../shop/shop.module';
+import { CommonModule } from '../../common/common.module';
 
 @Module({
   imports: [
-    // Entities for repos...
+    // Entities for repos
     TypeOrmModule.forFeature([Achievement]),
 
-    // Importar módulos necesarios
-    UserModule, // user repo
-    WalletModule, // WalletService
-    forwardRef(() => TaskModule), // Avoid circular dependencies
-    forwardRef(() => ShopModule), // Avoid circular dependencies
+    // Use forwardRef for modules to avoid circular dependencies
+    forwardRef(() => UserModule),
+    forwardRef(() => WalletModule),
+    forwardRef(() => TaskModule),
+    forwardRef(() => ShopModule),
+    forwardRef(() => CommonModule),
   ],
   controllers: [AchievementController],
   providers: [AchievementService],
-  exports: [AchievementService],
+  exports: [AchievementService, TypeOrmModule],
 })
 export class AchievementModule {}

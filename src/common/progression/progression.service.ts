@@ -1,16 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { UserEquipment } from 'src/modules/shop/entities/user-equipment.entity';
 import { User } from 'src/modules/user/entities/user.entity';
+import { TaskCompletion } from 'src/modules/task/entities/task-completion.entity';
+import { Achievement } from 'src/modules/achievement/entities/achievement.entity';
 import { UserService } from 'src/modules/user/user.service';
+import { WalletService } from 'src/modules/wallet/wallet.service';
+import { AchievementService } from 'src/modules/achievement/achievement.service';
 import { EquipmentType } from 'src/shared/enums/equipment-type.enum';
 import { ProgressionResult } from 'src/shared/interfaces/progression-result.interface';
-import { Repository } from 'typeorm';
 
-/**
- * Service to handle user progression
- * Handles XP, lvls and equipment bonuses
- */
 @Injectable()
 export class ProgressionService {
   constructor(
@@ -18,17 +18,18 @@ export class ProgressionService {
     private userRepository: Repository<User>,
     @InjectRepository(UserEquipment)
     private userEquipmentRepository: Repository<UserEquipment>,
+    @InjectRepository(TaskCompletion)
+    private taskCompletionRepository: Repository<TaskCompletion>,
+    @InjectRepository(Achievement)
+    private achievementRepository: Repository<Achievement>,
     private userService: UserService,
+    private walletService: WalletService,
+    private achievementService: AchievementService,
   ) {}
 
   /**
    * Add experience and coins to user
    * Applies equipment bonus and handles levelups
-   * @param userId user id
-   * @param xpAmount how much xp to add
-   * @param coinsAmount how many coins to add
-   * @param transactionDescription transaction of coins description
-   * @returns progression result, with xp and coins gained
    */
   async addExperienceAndCoins(
     userId: number,
@@ -59,7 +60,6 @@ export class ProgressionService {
 
     // Verify if level up
     let leveledUp = false;
-    let initialLevel = user.level;
 
     // While to handle multiples levelups at once
     while (user.currentXp >= user.xpToNextLevel) {
@@ -72,15 +72,21 @@ export class ProgressionService {
     // Save changes on user
     await this.userRepository.save(user);
 
-    // TODO: Añadir monedas con WalletService
-    // Este paso se implementará cuando tengamos el WalletService
-    // await this.walletService.addCoins(userId, adjustedCoins, transactionDescription);
+    // Add coins via WalletService
+    await this.walletService.addCoins(
+      userId,
+      adjustedCoins,
+      transactionDescription,
+    );
 
-    // TODO: Verificar logros con AchievementService
-    // Este paso se implementará cuando tengamos el AchievementService
-    // if (leveledUp) {
-    //   await this.achievementService.checkLevelAchievements(userId, user.level);
-    // }
+    // Check and potentially unlock achievements
+    const unlockedAchievements = await this.checkProgressAchievements(
+      userId,
+      adjustedXp,
+      adjustedCoins,
+      user.level,
+      leveledUp,
+    );
 
     // Return result
     return {
@@ -90,14 +96,156 @@ export class ProgressionService {
       xpToNextLevel: user.xpToNextLevel,
       currentLevel: user.level,
       leveledUp,
+      unlockedAchievements: unlockedAchievements.map((a) => ({
+        id: a.id,
+        name: a.name,
+        description: a.description,
+        icon: a.icon,
+      })),
     };
   }
 
   /**
-   * Calculates bonuses depending on active equipment
-   * @param userId user id
-   * @returns xp and coins multipliers
+   * Check and unlock various achievements based on progression
    */
+  private async checkProgressAchievements(
+    userId: number,
+    xpGained: number,
+    coinsGained: number,
+    currentLevel: number,
+    leveledUp: boolean,
+  ): Promise<Achievement[]> {
+    const unlockedAchievements: Achievement[] = [];
+
+    // Level achievements
+    if (leveledUp) {
+      const levelAchievements = await this.checkLevelAchievements(
+        userId,
+        currentLevel,
+      );
+      unlockedAchievements.push(...levelAchievements);
+    }
+
+    // Task completion achievements
+    const completedTasksCount = await this.taskCompletionRepository.count({
+      where: { user: { id: userId } },
+    });
+    const taskAchievements = await this.checkTaskAchievements(
+      userId,
+      completedTasksCount,
+    );
+    unlockedAchievements.push(...taskAchievements);
+
+    // Equipment collection achievements
+    const userEquipmentCount = await this.userEquipmentRepository.count({
+      where: { user: { id: userId } },
+    });
+    const equipmentAchievements = await this.checkEquipmentAchievements(
+      userId,
+      userEquipmentCount,
+    );
+    unlockedAchievements.push(...equipmentAchievements);
+
+    return unlockedAchievements;
+  }
+
+  /**
+   * Check and unlock level-based achievements
+   */
+  private async checkLevelAchievements(
+    userId: number,
+    currentLevel: number,
+  ): Promise<Achievement[]> {
+    const levelAchievementLevels = [5, 10, 25, 50];
+    const unlockedAchievements: Achievement[] = [];
+
+    for (const level of levelAchievementLevels) {
+      if (currentLevel >= level) {
+        const achievement = await this.achievementRepository.findOne({
+          where: {
+            user: { id: userId },
+            name: `Level ${level} Master`,
+            isUnlocked: false,
+          },
+        });
+
+        if (achievement) {
+          achievement.isUnlocked = true;
+          achievement.unlockedAt = new Date();
+          await this.achievementRepository.save(achievement);
+          unlockedAchievements.push(achievement);
+        }
+      }
+    }
+
+    return unlockedAchievements;
+  }
+
+  /**
+   * Check and unlock task completion achievements
+   */
+  private async checkTaskAchievements(
+    userId: number,
+    completedTasksCount: number,
+  ): Promise<Achievement[]> {
+    const taskAchievementThresholds = [10, 50, 100, 500];
+    const unlockedAchievements: Achievement[] = [];
+
+    for (const count of taskAchievementThresholds) {
+      if (completedTasksCount >= count) {
+        const achievement = await this.achievementRepository.findOne({
+          where: {
+            user: { id: userId },
+            name: `Task Champion ${count}`,
+            isUnlocked: false,
+          },
+        });
+
+        if (achievement) {
+          achievement.isUnlocked = true;
+          achievement.unlockedAt = new Date();
+          await this.achievementRepository.save(achievement);
+          unlockedAchievements.push(achievement);
+        }
+      }
+    }
+
+    return unlockedAchievements;
+  }
+
+  /**
+   * Check and unlock equipment-related achievements
+   */
+  private async checkEquipmentAchievements(
+    userId: number,
+    equipmentCount: number,
+  ): Promise<Achievement[]> {
+    const equipmentAchievementThresholds = [5, 15];
+    const unlockedAchievements: Achievement[] = [];
+
+    for (const count of equipmentAchievementThresholds) {
+      if (equipmentCount >= count) {
+        const achievement = await this.achievementRepository.findOne({
+          where: {
+            user: { id: userId },
+            name: `Equipment Collector ${count}`,
+            isUnlocked: false,
+          },
+        });
+
+        if (achievement) {
+          achievement.isUnlocked = true;
+          achievement.unlockedAt = new Date();
+          await this.achievementRepository.save(achievement);
+          unlockedAchievements.push(achievement);
+        }
+      }
+    }
+
+    return unlockedAchievements;
+  }
+
+  // Existing methods from the original implementation
   async calculateBonuses(
     userId: number,
   ): Promise<{ xpMultiplier: number; coinMultiplier: number }> {
@@ -133,11 +281,6 @@ export class ProgressionService {
     return 100 * currentLevel;
   }
 
-  /**
-   * Veryfy which equipment is equipped
-   * @param userId user id
-   * @returns map with types of equipment
-   */
   async getEquippedItems(
     userId: number,
   ): Promise<Map<EquipmentType, UserEquipment>> {
@@ -159,11 +302,6 @@ export class ProgressionService {
     return equipMap;
   }
 
-  /**
-   * Calculates and returns the user stats, including bonuses
-   * @param userID user id
-   * @returns stats wit bonuses applied
-   */
   async getUserStats(userId: number): Promise<{
     level: number;
     currentXp: number;

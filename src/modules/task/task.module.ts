@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TaskController } from './task.controller';
 import { TaskService } from './task.service';
@@ -13,10 +13,10 @@ import { WalletModule } from '../wallet/wallet.module';
     // Register entities for repos
     TypeOrmModule.forFeature([Task, TaskCompletion]),
 
-    // Necessary modules
-    CommonModule, // for ProgressionService
-    UserModule, // for acces to User repo
-    WalletModule, // for WalletService
+    // Use forwardRef for modules to avoid circular dependencies
+    forwardRef(() => CommonModule),
+    forwardRef(() => UserModule),
+    forwardRef(() => WalletModule),
   ],
   controllers: [TaskController],
   providers: [TaskService],

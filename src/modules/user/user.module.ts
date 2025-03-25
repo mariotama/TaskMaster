@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
@@ -11,11 +11,11 @@ import { CommonModule } from '../../common/common.module';
     // Register entitys for Repositories
     TypeOrmModule.forFeature([User, UserSettings]),
 
-    // CommonModule to use ProgressionService
-    CommonModule,
+    // Use forwardRef for modules to avoid circular dependencies
+    forwardRef(() => CommonModule),
   ],
   controllers: [UserController],
   providers: [UserService],
-  exports: [UserService, TypeOrmModule], // Export UserService and repositories
+  exports: [UserService, TypeOrmModule],
 })
 export class UserModule {}

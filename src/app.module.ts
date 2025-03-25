@@ -49,7 +49,7 @@ import * as Joi from 'joi';
       }),
     }),
 
-    // Módulos de la aplicación
+    // App modules
     CommonModule,
     AuthModule,
     UserModule,
