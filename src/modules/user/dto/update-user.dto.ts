@@ -34,4 +34,8 @@ export class UpdateUserDto {
   @IsString()
   @IsOptional()
   profileImageUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  timezone?: string;
 }

@@ -13,6 +13,7 @@ import {
 import * as bcrypt from 'bcrypt';
 import { JwtPayload } from 'src/shared/interfaces/user.interface';
 import { LoginDto } from './dto/login.dto';
+import { AchievementService } from '../achievement/achievement.service';
 
 /**
  * Service for authentication
@@ -23,6 +24,7 @@ export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private achievementService: AchievementService,
   ) {}
 
   /**
@@ -46,6 +48,9 @@ export class AuthService {
       username: registerDto.username,
       password: hashedPassword,
     });
+
+    // Initialize achievements for new user
+    await this.achievementService.initializeAchievements(user.id);
 
     // Generate token JWT
     const token = this.generateToken(user.id, user.email);

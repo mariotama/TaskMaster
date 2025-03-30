@@ -151,4 +151,15 @@ export class TaskController {
   async getTaskStatistics(@CurrentUser() user: User) {
     return this.taskService.getTaskStatistics(user.id);
   }
+
+  /**
+   * Resets daily tasks
+   * @param user actual user
+   * @returns daily tasks
+   */
+  @Post('reset-daily')
+  @UseGuards(JwtAuthGuard)
+  async resetDailyTasks() {
+    return this.taskService.forceResetDailyTasks();
+  }
 }

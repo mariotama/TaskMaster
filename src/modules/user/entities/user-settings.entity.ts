@@ -21,4 +21,7 @@ export class UserSettings {
   @OneToOne(() => User, (user) => user.settings)
   @JoinColumn()
   user: User;
+
+  @Column({ default: 'UTC' })
+  timezone: string;
 }

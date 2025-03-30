@@ -8,6 +8,7 @@ import { WalletModule } from '../wallet/wallet.module';
 import { TaskModule } from '../task/task.module';
 import { ShopModule } from '../shop/shop.module';
 import { CommonModule } from '../../common/common.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { CommonModule } from '../../common/common.module';
     forwardRef(() => TaskModule),
     forwardRef(() => ShopModule),
     forwardRef(() => CommonModule),
+    forwardRef(() => AuthModule),
   ],
   controllers: [AchievementController],
   providers: [AchievementService],

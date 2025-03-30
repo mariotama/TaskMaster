@@ -32,20 +32,6 @@ export class AchievementController {
   }
 
   /**
-   * Obtains specific achievement
-   * @param user actual user
-   * @param id achievement id
-   * @returns Achievement found
-   */
-  @Get(':id')
-  async findOne(
-    @CurrentUser() user: User,
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<AchievementResponseDto> {
-    return this.achievementService.findOne(id, user.id);
-  }
-
-  /**
    * Verifies all user's achievements
    * After an important event
    * @param user actual user
@@ -76,5 +62,19 @@ export class AchievementController {
   @Get('stats')
   async getAchievementStats(@CurrentUser() user: User) {
     return this.achievementService.getAchievementStats(user.id);
+  }
+
+  /**
+   * Obtains specific achievement
+   * @param user actual user
+   * @param id achievement id
+   * @returns Achievement found
+   */
+  @Get(':id')
+  async findOne(
+    @CurrentUser() user: User,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<AchievementResponseDto> {
+    return this.achievementService.findOne(id, user.id);
   }
 }

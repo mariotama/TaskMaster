@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from './entities/task.entity';
-import { MoreThan, Repository } from 'typeorm';
+import { In, MoreThan, Repository } from 'typeorm';
 import { TaskCompletion } from './entities/task-completion.entity';
 import { User } from '../user/entities/user.entity';
 import { ProgressionService } from 'src/common/progression/progression.service';
@@ -14,6 +14,7 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { TaskType } from 'src/shared/enums/task-type.enum';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { ProgressionResult } from 'src/shared/interfaces/progression-result.interface';
+import { Cron } from '@nestjs/schedule';
 
 /**
  * Service for user's task handling
@@ -204,17 +205,82 @@ export class TaskService {
   }
 
   /**
-   * TODO
-   * Reinicia las tareas diarias para todos los usuarios
-   * Este método debería ejecutarse por un cron job diariamente
+   * Restart daily tasks for all users in a specific timezone
+   * @param timezone user's timezone
    */
-  // async resetDailyTasks(): Promise<void> {
-  // Para tareas diarias, solo marcamos las completiones
-  // No modificamos el estado de isCompleted para mantener historial
+  async resetDailyTasksForTimezone(timezone: string): Promise<void> {
+    try {
+      // Find all users in the specified timezone
+      const users = await this.userRepository.find({
+        relations: ['settings'],
+        where: { settings: { timezone } },
+      });
 
-  // Este método puede ser llamado por un cron job configurado en el módulo
-  //console.log('Tareas diarias reiniciadas para todos los usuarios');
-  //}
+      const userIds = users.map((user) => user.id);
+
+      if (userIds.length === 0) {
+        return; // There are no users in this timezone
+      }
+
+      // Find all daily tasks for these users
+      const dailyTasks = await this.taskRepository.find({
+        where: {
+          type: TaskType.DAILY,
+          user: { id: In(userIds) },
+        },
+      });
+
+      console.log(
+        `Reseted ${dailyTasks.length} daily tasks ${userIds.length} users in timezone ${timezone}`,
+      );
+    } catch (error) {
+      console.error(`Error ${timezone}:`, error);
+      throw error;
+    }
+  }
+
+  // Cron jobs to reset daily tasks for different timezones
+  // Reset UTC
+  @Cron('0 0 * * *', { timeZone: 'UTC' })
+  async resetTasksUTC(): Promise<void> {
+    console.log('Ejecutando reinicio de tareas para UTC');
+    await this.resetDailyTasksForTimezone('UTC');
+  }
+
+  // Reset América/New_York (EST/EDT)
+  @Cron('0 0 * * *', { timeZone: 'America/New_York' })
+  async resetTasksEST(): Promise<void> {
+    console.log('Ejecutando reinicio de tareas para EST');
+    await this.resetDailyTasksForTimezone('America/New_York');
+  }
+
+  // Reset Europa/Madrid (CET/CEST)
+  @Cron('0 0 * * *', { timeZone: 'Europe/Madrid' })
+  async resetTasksCET(): Promise<void> {
+    console.log('Ejecutando reinicio de tareas para CET');
+    await this.resetDailyTasksForTimezone('Europe/Madrid');
+  }
+
+  // MANUAL RESET
+  async forceResetDailyTasks(): Promise<{ success: boolean; message: string }> {
+    try {
+      const timezones = ['UTC', 'America/New_York', 'Europe/Madrid'];
+
+      for (const tz of timezones) {
+        await this.resetDailyTasksForTimezone(tz);
+      }
+
+      return {
+        success: true,
+        message: 'Daily tasks reset successfully',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Error: ' + error,
+      };
+    }
+  }
 
   /**
    * Obtains historic task completion

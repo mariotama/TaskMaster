@@ -1,4 +1,9 @@
-import { Module } from '@nestjs/common';
+import {
+  Module,
+  NestModule,
+  MiddlewareConsumer,
+  RequestMethod,
+} from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -10,11 +15,14 @@ import { WalletModule } from './modules/wallet/wallet.module';
 import { ShopModule } from './modules/shop/shop.module';
 import { AchievementModule } from './modules/achievement/achievement.module';
 import { CommonModule } from './common/common.module';
+import { LoggingMiddleware } from './common/middleware/logging.middleware';
 import * as Joi from 'joi';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
-    // Centralized config with validation
+    ScheduleModule.forRoot(),
+    // Configuración centralizada con validación
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
@@ -29,10 +37,11 @@ import * as Joi from 'joi';
         DB_NAME: Joi.string().default('taskmaster'),
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRATION: Joi.string().default('1d'),
+        FRONTEND_URL: Joi.string().default('*'),
       }),
     }),
 
-    // TypeORM config
+    // Configuración de TypeORM
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -49,7 +58,7 @@ import * as Joi from 'joi';
       }),
     }),
 
-    // App modules
+    // Módulos de la aplicación
     CommonModule,
     AuthModule,
     UserModule,
@@ -61,4 +70,11 @@ import * as Joi from 'joi';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    // Aplicar LoggingMiddleware a todas las rutas
+    consumer
+      .apply(LoggingMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
+  }
+}
