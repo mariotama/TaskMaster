@@ -2,20 +2,20 @@ import { INestApplication } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 /**
- * Configura Swagger/OpenAPI para documentación de API
- * @param app Instancia de la aplicación NestJS
+ * Configue Swagger/OpenAPI for API documentation
+ * @param app NestJS application instance
  */
 export function setupSwagger(app: INestApplication) {
   const config = new DocumentBuilder()
     .setTitle('TaskMaster API')
-    .setDescription('API para sistema de gamificación de productividad')
+    .setDescription('API for the TaskMaster application')
     .setVersion('1.0')
-    .addTag('auth', 'Endpoints de autenticación')
-    .addTag('users', 'Gestión de usuarios')
-    .addTag('tasks', 'Gestión de tareas')
-    .addTag('wallet', 'Economía virtual')
-    .addTag('shop', 'Tienda y equipamiento')
-    .addTag('achievements', 'Logros desbloqueables')
+    .addTag('auth', 'Auth endpoints')
+    .addTag('users', 'User management')
+    .addTag('tasks', 'Task management')
+    .addTag('wallet', 'Virtual economy')
+    .addTag('shop', 'Store and equipment')
+    .addTag('achievements', 'Achievements')
     .addBearerAuth(
       {
         type: 'http',

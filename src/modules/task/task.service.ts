@@ -315,43 +315,43 @@ export class TaskService {
     totalCompleted: number;
     dailyCompleted: number;
     missionsCompleted: number;
-    streakDays: number;
   }> {
-    // Total count of completed tasks
-    const totalCompleted = await this.taskCompletionRepository.count({
-      where: { user: { id: userId } },
-    });
+    try {
+      // Completed tasks total
+      const totalCompleted = await this.taskCompletionRepository.count({
+        where: { user: { id: userId } },
+      });
 
-    // Total count of completed missions
-    const missionsCompleted = await this.taskRepository.count({
-      where: {
-        user: { id: userId },
-        type: TaskType.MISSION,
-        isCompleted: true,
-      },
-    });
+      // Completed missions
+      const missionsCompleted = await this.taskRepository.count({
+        where: {
+          user: { id: userId },
+          type: TaskType.MISSION,
+          isCompleted: true,
+        },
+      });
 
-    // Total count of DAILY tasks
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      // Daili tasks completed in the last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const dailyCompletions = await this.taskCompletionRepository
-      .createQueryBuilder('completion')
-      .innerJoin('completion.task', 'task')
-      .where('completion.user_id = :userId', { userId })
-      .andWhere('task.type = :type', { type: TaskType.DAILY })
-      .andWhere('completion.completedAt > :date', { date: thirtyDaysAgo })
-      .getCount();
+      const dailyCompletions = await this.taskCompletionRepository
+        .createQueryBuilder('completion')
+        .innerJoin('completion.task', 'task')
+        .innerJoin('completion.user', 'user')
+        .where('user.id = :userId', { userId })
+        .andWhere('task.type = :type', { type: TaskType.DAILY })
+        .andWhere('completion.completedAt > :date', { date: thirtyDaysAgo })
+        .getCount();
 
-    // Calculate streak
-    // More complex
-    const streakDays = 0; // Placeholder
-
-    return {
-      totalCompleted,
-      dailyCompleted: dailyCompletions,
-      missionsCompleted,
-      streakDays,
-    };
+      return {
+        totalCompleted,
+        dailyCompleted: dailyCompletions,
+        missionsCompleted,
+      };
+    } catch (error) {
+      console.error('Error at getTaskStatistics:', error);
+      throw new Error(`Error obtaining stats: ${error}`);
+    }
   }
 }
