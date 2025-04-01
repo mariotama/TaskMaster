@@ -1,11 +1,7 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from './entities/task.entity';
-import { In, MoreThan, Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { TaskCompletion } from './entities/task-completion.entity';
 import { User } from '../user/entities/user.entity';
 import { ProgressionService } from 'src/common/progression/progression.service';
@@ -150,58 +146,35 @@ export class TaskService {
    * @returns result of XP progression and coins gained
    */
   async completeTask(id: number, userId: number): Promise<ProgressionResult> {
-    // Verify that the task exists and belongs to user
-    const task = await this.findOne(id, userId);
+    try {
+      const task = await this.findOne(id, userId);
 
-    // Validate that the task isn't already completed
-    if (task.isCompleted && task.type === TaskType.MISSION) {
-      throw new BadRequestException('This task is already completed');
-    }
-
-    // If DAILY, verify if it was completed TODAY
-    if (task.type === TaskType.DAILY) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const completedToday = await this.taskCompletionRepository.findOne({
-        where: {
-          task: { id },
-          user: { id: userId },
-          completedAt: MoreThan(today),
-        },
+      const completion = this.taskCompletionRepository.create({
+        task: { id },
+        user: { id: userId },
+        xpEarned: task.xpReward,
+        coinsEarned: task.coinReward,
       });
 
-      if (completedToday) {
-        throw new BadRequestException('This task was already completed today');
+      await this.taskCompletionRepository.save(completion);
+
+      if (task.type === TaskType.MISSION) {
+        await this.taskRepository.update({ id }, { isCompleted: true });
       }
+
+      const progressionResult =
+        await this.progressionService.addExperienceAndCoins(
+          userId,
+          task.xpReward,
+          task.coinReward,
+          `Task completed: ${task.title}`,
+        );
+
+      return progressionResult;
+    } catch (error) {
+      console.error('Error completing task:', error);
+      throw error;
     }
-
-    // Register completed
-    const completion = this.taskCompletionRepository.create({
-      task: { id },
-      user: { id: userId },
-      xpEarned: task.xpReward,
-      coinsEarned: task.coinReward,
-    });
-
-    await this.taskCompletionRepository.save(completion);
-
-    // Mark as completed (only for missions)
-    if (task.type === TaskType.MISSION) {
-      task.isCompleted = true;
-      await this.taskRepository.save(task);
-    }
-
-    // Give XP and coins
-    const progressionResult =
-      await this.progressionService.addExperienceAndCoins(
-        userId,
-        task.xpReward,
-        task.coinReward,
-        `Task completed: ${task.title}`,
-      );
-
-    return progressionResult;
   }
 
   /**
@@ -294,16 +267,32 @@ export class TaskService {
     page = 1,
     limit = 10,
   ): Promise<{ completions: TaskCompletion[]; total: number }> {
-    const [completions, total] =
-      await this.taskCompletionRepository.findAndCount({
-        where: { user: { id: userId } },
-        relations: ['task'],
-        order: { completedAt: 'DESC' },
-        skip: (page - 1) * limit,
-        take: limit,
-      });
+    try {
+      const [completions, total] =
+        await this.taskCompletionRepository.findAndCount({
+          where: { user: { id: userId } },
+          relations: ['task'], // Make sure 'task' is loaded
+          order: { completedAt: 'DESC' },
+          skip: (page - 1) * limit,
+          take: limit,
+        });
 
-    return { completions, total };
+      // Filter out any completions with null task
+      const validCompletions = completions.filter(
+        (completion) => completion.task !== null,
+      );
+
+      // Log the completions for debugging
+      console.log(
+        `Task completion history for user ${userId}:`,
+        `Found ${completions.length} completions, ${validCompletions.length} with valid task references`,
+      );
+
+      return { completions: validCompletions, total };
+    } catch (error) {
+      console.error(`Error in getCompletionHistory for user ${userId}:`, error);
+      throw error;
+    }
   }
 
   /**

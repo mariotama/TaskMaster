@@ -9,8 +9,8 @@ import { Task } from './task.entity';
 import { User } from '../../user/entities/user.entity';
 
 /**
- * Registro de tareas completadas
- * Permite seguimiento histórico de completados y estadísticas
+ * Historic of task completions
+ * Allows to track the completions of tasks by users
  */
 @Entity()
 export class TaskCompletion {
@@ -26,9 +26,13 @@ export class TaskCompletion {
   @Column({ default: 0 })
   coinsEarned: number;
 
-  @ManyToOne(() => Task, (task) => task.completions)
+  @ManyToOne(() => Task, (task) => task.completions, {
+    nullable: false,
+    onDelete: 'CASCADE',
+    orphanedRowAction: 'nullify',
+  })
   task: Task;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: false })
   user: User;
 }
