@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from './entities/task.entity';
-import { In, Repository } from 'typeorm';
+import { Between, In, Repository } from 'typeorm';
 import { TaskCompletion } from './entities/task-completion.entity';
 import { User } from '../user/entities/user.entity';
 import { ProgressionService } from 'src/common/progression/progression.service';
@@ -11,6 +15,7 @@ import { TaskType } from 'src/shared/enums/task-type.enum';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { ProgressionResult } from 'src/shared/interfaces/progression-result.interface';
 import { Cron } from '@nestjs/schedule';
+import { UserSettings } from '../user/entities/user-settings.entity';
 
 /**
  * Service for user's task handling
@@ -27,6 +32,8 @@ export class TaskService {
     private userRepository: Repository<User>,
     private progressionService: ProgressionService,
     private walletService: WalletService,
+    @InjectRepository(UserSettings)
+    private userSettingsRepository: Repository<UserSettings>,
   ) {}
 
   /**
@@ -60,7 +67,7 @@ export class TaskService {
 
   async findAll(
     userId: number,
-    filters?: { type?: TaskType; isCompleted?: boolean },
+    filters?: { type?: TaskType; isCompleted?: boolean | string },
   ): Promise<Task[]> {
     const whereCondition: {
       user: { id: number };
@@ -70,12 +77,18 @@ export class TaskService {
       user: { id: userId },
     };
 
-    // Apply filter (if exist)
+    // Apply filter if it exists
     if (filters?.type) {
       whereCondition.type = filters.type;
     }
-    if (filters?.isCompleted) {
-      whereCondition.isCompleted = filters.isCompleted;
+
+    if (filters?.isCompleted !== undefined) {
+      // Convert string 'true'/'false' to boolean
+      if (typeof filters.isCompleted === 'string') {
+        whereCondition.isCompleted = filters.isCompleted === 'true';
+      } else {
+        whereCondition.isCompleted = filters.isCompleted;
+      }
     }
 
     return this.taskRepository.find({
@@ -160,6 +173,47 @@ export class TaskService {
 
       if (task.type === TaskType.MISSION) {
         await this.taskRepository.update({ id }, { isCompleted: true });
+      }
+
+      if (task.type === TaskType.DAILY) {
+        const userSettings = await this.userSettingsRepository.findOne({
+          where: { user: { id: userId } },
+        });
+
+        const userTimezone = userSettings?.timezone || 'Europe/Madrid';
+
+        const now = new Date();
+
+        const today = new Date(
+          now.toLocaleDateString('en-US', { timeZone: userTimezone }),
+        );
+
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        console.log(
+          `Verificando si la tarea diaria ${id} ya fue completada hoy`,
+          {
+            timezone: userTimezone,
+            now: now.toISOString(),
+            inicio: today.toISOString(),
+            fin: tomorrow.toISOString(),
+          },
+        );
+
+        const completedToday = await this.taskCompletionRepository.findOne({
+          where: {
+            task: { id },
+            user: { id: userId },
+            completedAt: Between(today, tomorrow),
+          },
+          relations: ['task'],
+        });
+
+        if (completedToday) {
+          console.log('Tarea ya completada hoy:', completedToday);
+          throw new BadRequestException('Esta tarea ya fue completada hoy');
+        }
       }
 
       const progressionResult =
