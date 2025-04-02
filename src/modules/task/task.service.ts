@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from './entities/task.entity';
-import { Between, In, Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { TaskCompletion } from './entities/task-completion.entity';
 import { User } from '../user/entities/user.entity';
 import { ProgressionService } from 'src/common/progression/progression.service';
@@ -162,6 +162,29 @@ export class TaskService {
     try {
       const task = await this.findOne(id, userId);
 
+      if (task.isCompleted && task.type === TaskType.MISSION) {
+        throw new BadRequestException('Esta tarea ya está completada');
+      }
+
+      if (task.type === TaskType.DAILY) {
+        console.log(
+          `Verificando si la tarea diaria ${id} ya fue completada hoy`,
+        );
+
+        const completedToday = await this.taskCompletionRepository
+          .createQueryBuilder('completion')
+          .innerJoinAndSelect('completion.task', 'task')
+          .where('task.id = :taskId', { taskId: id })
+          .andWhere('completion.userId = :userId', { userId })
+          .andWhere('DATE(completion.completedAt) = CURRENT_DATE')
+          .getOne();
+
+        if (completedToday) {
+          console.log('Tarea ya completada hoy:', completedToday);
+          throw new BadRequestException('Esta tarea ya fue completada hoy');
+        }
+      }
+
       const completion = this.taskCompletionRepository.create({
         task: { id },
         user: { id: userId },
@@ -171,57 +194,18 @@ export class TaskService {
 
       await this.taskCompletionRepository.save(completion);
 
+      // Actualizar misiones como completadas
       if (task.type === TaskType.MISSION) {
         await this.taskRepository.update({ id }, { isCompleted: true });
       }
 
-      if (task.type === TaskType.DAILY) {
-        const userSettings = await this.userSettingsRepository.findOne({
-          where: { user: { id: userId } },
-        });
-
-        const userTimezone = userSettings?.timezone || 'Europe/Madrid';
-
-        const now = new Date();
-
-        const today = new Date(
-          now.toLocaleDateString('en-US', { timeZone: userTimezone }),
-        );
-
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        console.log(
-          `Verificando si la tarea diaria ${id} ya fue completada hoy`,
-          {
-            timezone: userTimezone,
-            now: now.toISOString(),
-            inicio: today.toISOString(),
-            fin: tomorrow.toISOString(),
-          },
-        );
-
-        const completedToday = await this.taskCompletionRepository.findOne({
-          where: {
-            task: { id },
-            user: { id: userId },
-            completedAt: Between(today, tomorrow),
-          },
-          relations: ['task'],
-        });
-
-        if (completedToday) {
-          console.log('Tarea ya completada hoy:', completedToday);
-          throw new BadRequestException('Esta tarea ya fue completada hoy');
-        }
-      }
-
+      // Dar XP y monedas
       const progressionResult =
         await this.progressionService.addExperienceAndCoins(
           userId,
           task.xpReward,
           task.coinReward,
-          `Task completed: ${task.title}`,
+          `Tarea completada: ${task.title}`,
         );
 
       return progressionResult;
