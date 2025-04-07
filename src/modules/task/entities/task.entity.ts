@@ -11,8 +11,8 @@ import { TaskCompletion } from './task-completion.entity';
 import { TaskType } from '../../../shared/enums/task-type.enum';
 
 /**
- * Tareas creadas por los usuarios
- * Definen objetivos con recompensas y estado de completitud
+ * User created tasks
+ * Define objectivees with rewards and completion state
  */
 @Entity()
 export class Task {

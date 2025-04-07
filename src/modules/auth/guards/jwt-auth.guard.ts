@@ -8,7 +8,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
 
 /**
- * Guard to protect roures that require JWT auth
+ * Guard to protect routes that require JWT auth
  * Verifies that token is valid and its there
  */
 @Injectable()

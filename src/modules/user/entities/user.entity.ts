@@ -13,8 +13,9 @@ import { UserEquipment } from '../../shop/entities/user-equipment.entity';
 import { UserSettings } from './user-settings.entity';
 
 /**
- * Entidad principal de usuario
- * Almacena información de perfil, progresión y relaciones con otras entidades
+ * Main user entity
+ * Stores all the information about the user
+ * including their wallet, tasks, achievements, and settings.
  */
 @Entity()
 export class User {

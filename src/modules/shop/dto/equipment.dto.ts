@@ -15,7 +15,7 @@ import { EquipmentType } from '../../../shared/enums/equipment-type.enum';
 import { Rarity } from '../../../shared/enums/rarity.enum';
 
 /**
- * DTO para las estadísticas de equipamiento
+ * DTO for equipment stats
  */
 export class EquipmentStatsDto {
   @IsNumber()
@@ -32,7 +32,7 @@ export class EquipmentStatsDto {
 }
 
 /**
- * DTO para crear nuevos equipamientos en el catálogo
+ * DTO to create new equipment
  */
 export class CreateEquipmentDto {
   @IsString()
@@ -75,7 +75,7 @@ export class CreateEquipmentDto {
 }
 
 /**
- * DTO para actualizar equipamientos existentes
+ * DTO to update equipment
  */
 export class UpdateEquipmentDto {
   @IsString()
@@ -116,7 +116,7 @@ export class UpdateEquipmentDto {
 }
 
 /**
- * DTO para respuesta con información de equipamiento
+ * DTO for equipment response
  */
 export class EquipmentResponseDto {
   id: number;

@@ -7,25 +7,25 @@ import {
 } from 'class-validator';
 
 export class RegisterDto {
-  @IsEmail({}, { message: 'Por favor, ingresa un email válido' })
-  @IsNotEmpty({ message: 'El email es obligatorio' })
+  @IsEmail({}, { message: 'Please, use a valid e-mail' })
+  @IsNotEmpty({ message: 'E-mail is mandatory' })
   email: string;
 
   @IsString()
   @MinLength(3, {
-    message: 'El nombre de usuario debe contener al menos 3 carácteres',
+    message: 'Username must be at least 3 characters long',
   })
   @Matches(/^[a-zA-Z0-9_-]+$/, {
     message:
-      'El nombre de usuario solo puede contener letras, números, guiones bajos y guiones.',
+      'Username can only contain letters, numbers, underscores and dashes',
   })
-  @IsNotEmpty({ message: 'El nombre de usuario es obligatorio' })
+  @IsNotEmpty({ message: 'Username is mandatory' })
   username: string;
 
   @IsString()
   @MinLength(6, {
-    message: 'La contraseña debe contener al menos 6 carácteres ',
+    message: 'Password must be at least 6 characters long',
   })
-  @IsNotEmpty({ message: 'La contraseña es obligatoria' })
+  @IsNotEmpty({ message: 'Password is mandatory' })
   password: string;
 }

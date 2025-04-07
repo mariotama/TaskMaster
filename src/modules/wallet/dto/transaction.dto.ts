@@ -2,7 +2,7 @@ import { IsNumber, IsString, IsEnum, IsNotEmpty, Min } from 'class-validator';
 import { TransactionType } from '../../../shared/enums/transaction-type.enum';
 
 /**
- * DTO para crear transacciones
+ * DTO for creating a transaction
  */
 export class CreateTransactionDto {
   @IsNumber()
@@ -20,7 +20,7 @@ export class CreateTransactionDto {
 }
 
 /**
- * DTO para respuesta con información de billetera
+ * DTO for response with wallet information
  */
 export class WalletResponseDto {
   id: number;
@@ -29,7 +29,7 @@ export class WalletResponseDto {
 }
 
 /**
- * DTO para respuesta con información de transacción
+ * DTO for response with transaction information
  */
 export class TransactionResponseDto {
   id: number;

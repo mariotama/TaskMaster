@@ -10,7 +10,6 @@ import { WalletModule } from '../wallet/wallet.module';
 
 @Module({
   imports: [
-    // Register entities for repos
     TypeOrmModule.forFeature([Task, TaskCompletion]),
 
     // Use forwardRef for modules to avoid circular dependencies
@@ -20,6 +19,6 @@ import { WalletModule } from '../wallet/wallet.module';
   ],
   controllers: [TaskController],
   providers: [TaskService],
-  exports: [TaskService, TypeOrmModule], // Export taskService and repositories
+  exports: [TaskService, TypeOrmModule],
 })
 export class TaskModule {}

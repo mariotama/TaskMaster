@@ -64,7 +64,6 @@ export class TaskService {
    * @param filters optional filters (type, complete)
    * @returns task list
    */
-
   async findAll(
     userId: number,
     filters?: { type?: TaskType; isCompleted?: boolean | string },

@@ -8,19 +8,19 @@ import {
 } from 'class-validator';
 
 export class CreateUserDto {
-  @IsEmail({}, { message: 'Por favor, ingresa un email válido ' })
-  @IsNotEmpty({ message: 'El email es obligatorio ' })
+  @IsEmail({}, { message: 'Use a valid e-mail' })
+  @IsNotEmpty({ message: 'E-mail is mandatory' })
   email: string;
 
   @IsString()
   @MinLength(3, {
-    message: 'El nombre de usuario debe tener al menos 3 carácteres ',
+    message: 'Username must be 3 characters or longer',
   })
   @Matches(/^[a-zA-Z0-9_-]+$/, {
     message:
-      'El nombre de usuario solo puede contener letras, números, guiones bajos y guiones',
+      'Username can only contain letters, numbers, underscores and dashes',
   })
-  @IsNotEmpty({ message: 'El nombre de usuario es obligatorio' })
+  @IsNotEmpty({ message: 'Username is mandatory' })
   username: string;
 
   @IsString()

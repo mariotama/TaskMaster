@@ -1,5 +1,5 @@
 /**
- * Interfaz para el payload del token JWT
+ * Interface for payload of JWT token
  */
 export interface JwtPayload {
   sub: number; // Id del usuario
@@ -9,8 +9,8 @@ export interface JwtPayload {
 }
 
 /**
- * Interfaz para representar usuario actual en requests
- * Utilizada con el decorador @CurrentUser()
+ * Interfeace to represent actual user on requests
+ * Uses with the decorator @CurrentUser
  */
 export interface CurrentUserInfo {
   id: number;

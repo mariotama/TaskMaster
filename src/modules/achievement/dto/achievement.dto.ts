@@ -2,7 +2,7 @@ import { IsString, IsBoolean, IsNotEmpty, IsOptional } from 'class-validator';
 import { Expose } from 'class-transformer';
 
 /**
- * DTO para la creación de logros
+ * DTO for creating an achievement
  */
 export class CreateAchievementDto {
   @IsString()
@@ -19,7 +19,7 @@ export class CreateAchievementDto {
 }
 
 /**
- * DTO para actualizar estados de logros
+ * DTO for updating an achievement
  */
 export class UpdateAchievementDto {
   @IsBoolean()
@@ -28,7 +28,7 @@ export class UpdateAchievementDto {
 }
 
 /**
- * DTO para respuesta con información de logros
+ * DTO for the response of an achievement
  */
 export class AchievementResponseDto {
   @Expose()

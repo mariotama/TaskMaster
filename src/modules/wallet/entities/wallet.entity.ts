@@ -10,8 +10,8 @@ import { User } from '../../user/entities/user.entity';
 import { Transaction } from './transaction.entity';
 
 /**
- * Billetera virtual del usuario
- * Gestiona la moneda virtual y registra transacciones
+ * Virtual user wallet
+ * Handles coins and transactions
  */
 @Entity()
 export class Wallet {

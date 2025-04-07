@@ -9,8 +9,8 @@ import { Wallet } from './wallet.entity';
 import { TransactionType } from '../../../shared/enums/transaction-type.enum';
 
 /**
- * Registro de transacciones económicas
- * Documenta cada movimiento financiero, con tipo, cantidad y descripción
+ * Registers a financial transaction in the system.
+ * Stores information about the transaction amount, description, type (income or expense), and the associated wallet.
  */
 @Entity()
 export class Transaction {

@@ -4,8 +4,8 @@ import { EquipmentType } from '../../../shared/enums/equipment-type.enum';
 import { Rarity } from '../../../shared/enums/rarity.enum';
 
 /**
- * Catálogo de equipamiento disponible
- * Define ítems que otorgan bonificadores al usuario
+ * Equipment available in the shop
+ * Defines items that give bonuses to the user
  */
 @Entity()
 export class Equipment {

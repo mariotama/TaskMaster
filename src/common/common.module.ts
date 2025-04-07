@@ -14,7 +14,6 @@ import { TaskModule } from '../modules/task/task.module';
 
 @Module({
   imports: [
-    // Register required entities
     TypeOrmModule.forFeature([
       User,
       UserEquipment,
@@ -22,7 +21,6 @@ import { TaskModule } from '../modules/task/task.module';
       Achievement,
     ]),
 
-    // Import necessary modules to resolve dependencies
     forwardRef(() => UserModule),
     forwardRef(() => WalletModule),
     forwardRef(() => AchievementModule),
@@ -30,10 +28,6 @@ import { TaskModule } from '../modules/task/task.module';
     forwardRef(() => TaskModule),
   ],
   providers: [ProgressionService, NotificationService],
-  exports: [
-    ProgressionService,
-    NotificationService,
-    TypeOrmModule, // Export TypeOrmModule for entity repositories
-  ],
+  exports: [ProgressionService, NotificationService, TypeOrmModule],
 })
 export class CommonModule {}

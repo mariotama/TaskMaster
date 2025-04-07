@@ -2,8 +2,8 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 
 /**
- * Logros desbloqueables por el usuario
- * Recompensa por cumplir ciertos hitos
+ * Unlockable achievements for users
+ * Reward for completing tasks
  */
 @Entity()
 export class Achievement {

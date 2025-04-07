@@ -1,7 +1,7 @@
 /**
- * Enumera los tipos de transacciones económicas en el sistema
- * - INCOME: Ingresos (completar tareas, recibir recompensas)
- * - EXPENSE: Gastos (comprar equipamiento)
+ * Enums types of transactions
+ * - INCOME
+ * - EXPENSE
  */
 export enum TransactionType {
   INCOME = 'income',

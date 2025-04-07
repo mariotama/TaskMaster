@@ -1,8 +1,8 @@
 /**
- * Enumera los tipos de equipamiento que pueden usar los usuarios
- * - HEAD: Equipamiento para la cabeza (cascos, sombreros, etc.)
- * - BODY: Equipamiento para el cuerpo (armaduras, ropa, etc.)
- * - ACCESSORY: Accesorios (amuletos, anillos, etc.)
+ * Types of equipment that can be used in the game.
+ * - HEAD
+ * - BODY
+ * - ACCESSORY
  */
 
 export enum EquipmentType {

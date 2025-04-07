@@ -8,7 +8,6 @@ import { CommonModule } from '../../common/common.module';
 
 @Module({
   imports: [
-    // Register entitys for Repositories
     TypeOrmModule.forFeature([User, UserSettings]),
 
     // Use forwardRef for modules to avoid circular dependencies

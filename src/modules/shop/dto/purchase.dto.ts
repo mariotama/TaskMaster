@@ -1,27 +1,27 @@
 import { IsNumber, IsPositive, IsNotEmpty } from 'class-validator';
 
 /**
- * DTO para realizar compras de equipamiento
+ * DTO for purchasing equipment
  */
 export class PurchaseDto {
   @IsNumber()
-  @IsPositive({ message: 'El ID del equipamiento debe ser válido' })
-  @IsNotEmpty({ message: 'El ID del equipamiento es obligatorio' })
+  @IsPositive({ message: 'Equipment ID must be valid' })
+  @IsNotEmpty({ message: 'Equipment ID is mandatory' })
   equipmentId: number;
 }
 
 /**
- * DTO para equipar o desequipar ítems
+ * DTO for equipping an item
  */
 export class EquipItemDto {
   @IsNumber()
-  @IsPositive({ message: 'El ID del equipamiento de usuario debe ser válido' })
-  @IsNotEmpty({ message: 'El ID del equipamiento de usuario es obligatorio' })
+  @IsPositive({ message: 'Equipment ID must be valid' })
+  @IsNotEmpty({ message: 'Equipment ID is mandatory' })
   userEquipmentId: number;
 }
 
 /**
- * DTO para respuesta con información de equipamiento de usuario
+ * DTO for response
  */
 export class UserEquipmentResponseDto {
   id: number;

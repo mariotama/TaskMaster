@@ -7,27 +7,27 @@ import {
 } from 'class-validator';
 
 /**
- * DTO para actualizar información de usuario
- * Todos los campos son opcionales en una actualización
+ * DTO to update a user
+ * All fields are optional
  */
 export class UpdateUserDto {
-  @IsEmail({}, { message: 'Por favor ingresa un email válido' })
+  @IsEmail({}, { message: 'Please use a valid e-mail' })
   @IsOptional()
   email?: string;
 
   @IsString()
   @MinLength(3, {
-    message: 'El nombre de usuario debe tener al menos 3 caracteres',
+    message: 'Username must be at least 3 characters long',
   })
   @Matches(/^[a-zA-Z0-9_-]+$/, {
     message:
-      'El nombre de usuario solo puede contener letras, números, guiones bajos y guiones',
+      'Username can only contain letters, numbers, underscores and dashes',
   })
   @IsOptional()
   username?: string;
 
   @IsString()
-  @MinLength(6, { message: 'La contraseña debe tener al menos 6 caracteres' })
+  @MinLength(6, { message: 'Password must be at least 6 characters' })
   @IsOptional()
   password?: string;
 

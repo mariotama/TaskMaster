@@ -1,8 +1,8 @@
 import { Exclude, Expose, Type } from 'class-transformer';
 
 /**
- * DTO para respuestas que incluyen información de usuario
- * Excluye información sensible como contraseñas
+ * DTO for answers that include user information
+ * Exclude sensitive data like password
  */
 export class UserResponseDto {
   @Expose()
@@ -38,8 +38,8 @@ export class UserResponseDto {
 }
 
 /**
- * DTO para respuesta de autenticación
- * Incluye token JWT y datos del usuario
+ * DTO for authentication response
+ * Includes JWT token and user information
  */
 export class AuthResponseDto {
   @Expose()

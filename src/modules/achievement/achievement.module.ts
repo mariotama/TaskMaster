@@ -12,7 +12,6 @@ import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
-    // Entities for repos
     TypeOrmModule.forFeature([Achievement]),
 
     // Use forwardRef for modules to avoid circular dependencies

@@ -22,7 +22,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
-    // Configuración centralizada con validación
+    // Centralized configuration with validation
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
@@ -41,7 +41,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       }),
     }),
 
-    // Configuración de TypeORM
+    // TypeORM configuration
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -58,7 +58,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       }),
     }),
 
-    // Módulos de la aplicación
+    // App modules
     CommonModule,
     AuthModule,
     UserModule,
@@ -72,7 +72,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    // Aplicar LoggingMiddleware a todas las rutas
+    // Apply LoggingMiddleware to all routes
     consumer
       .apply(LoggingMiddleware)
       .forRoutes({ path: '*', method: RequestMethod.ALL });
