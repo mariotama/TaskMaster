@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEquipment } from '../shop/entities/user-equipment.entity';
@@ -13,7 +13,7 @@ import { AchievementResponseDto } from './dto/achievement.dto';
  * Handles verification, unlocking and checking achivements
  */
 @Injectable()
-export class AchievementService {
+export class AchievementService implements OnModuleInit {
   // Definitions of avaiable achievements
   private readonly achievementDefinitions = [
     // Lvl achievements
@@ -104,6 +104,95 @@ export class AchievementService {
     private userEquipmentRepository: Repository<UserEquipment>,
     private walletService: WalletService,
   ) {}
+
+  /**
+   * This method executes when the module is initialized
+   * Verifies if all existing users have their achievements initialized
+   */
+  async onModuleInit() {
+    try {
+      console.log('Verifying achievement system...');
+
+      // Obtain all users
+      const users = await this.userRepository.find();
+      let usersUpdated = 0;
+
+      // For each user, check if they have achievements
+      for (const user of users) {
+        const achievementCount = await this.achievementRepository.count({
+          where: { user: { id: user.id } },
+        });
+
+        // If user has no achievements, initialize them
+        if (achievementCount === 0) {
+          await this.initializeAchievements(user.id);
+          usersUpdated++;
+        }
+      }
+
+      if (usersUpdated > 0) {
+        console.log(
+          `Achievements initialized for ${usersUpdated} existing users.`,
+        );
+      } else {
+        console.log('All users have initialized achievements.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+
+  /**
+   * Updates the achievement system for all users
+   */
+  async updateAchievementSystem() {
+    try {
+      // Obtain all users
+      const users = await this.userRepository.find();
+      let updatesCount = 0;
+
+      // For each user
+      for (const user of users) {
+        // Obtain all achievements of the user
+        const userAchievements = await this.achievementRepository.find({
+          where: { user: { id: user.id } },
+        });
+
+        // Achievements names of the user
+        const existingNames = userAchievements.map((a) => a.name);
+
+        // Find missing achievements by name
+        const missingAchievements = this.achievementDefinitions
+          .filter((def) => !existingNames.includes(def.name))
+          .map((def) =>
+            this.achievementRepository.create({
+              name: def.name,
+              description: def.description,
+              icon: def.icon,
+              isUnlocked: false,
+              user: { id: user.id },
+            }),
+          );
+
+        if (missingAchievements.length > 0) {
+          await this.achievementRepository.save(missingAchievements);
+          updatesCount += missingAchievements.length;
+        }
+      }
+
+      return {
+        updated: updatesCount > 0,
+        message:
+          updatesCount > 0
+            ? `Added ${updatesCount} new achievements.`
+            : '0 new achievements added.',
+        count: updatesCount,
+      };
+    } catch (error) {
+      console.error('Error:', error);
+      throw error;
+    }
+  }
 
   /**
    * Obtains all of one user achivements

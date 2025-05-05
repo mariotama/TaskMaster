@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, LessThanOrEqual, Not, Repository } from 'typeorm';
@@ -25,7 +26,104 @@ import { UserEquipmentResponseDto } from './dto/purchase.dto';
  * Handles shop, buys, inventory and item equipment
  */
 @Injectable()
-export class ShopService {
+export class ShopService implements OnModuleInit {
+  private readonly equipmentDefinitions = [
+    // HEAD
+    {
+      name: 'Basic Cap',
+      description: 'A simple cap that provides basic protection',
+      icon: 'hat',
+      type: EquipmentType.HEAD,
+      rarity: Rarity.COMMON,
+      price: 100,
+      stats: { xpBonus: 5 },
+      requiredLevel: 1,
+    },
+    {
+      name: 'Focus Helmet',
+      description: 'Enhances your focus and mental clarity',
+      icon: 'helmet',
+      type: EquipmentType.HEAD,
+      rarity: Rarity.RARE,
+      price: 300,
+      stats: { xpBonus: 10 },
+      requiredLevel: 5,
+    },
+    {
+      name: 'Crown of Wisdom',
+      description: 'A legendary crown that maximizes your productivity',
+      icon: 'crown',
+      type: EquipmentType.HEAD,
+      rarity: Rarity.EPIC,
+      price: 1000,
+      stats: { xpBonus: 20 },
+      requiredLevel: 15,
+    },
+
+    // BODY
+    {
+      name: 'Task Vest',
+      description: 'A comfortable vest with plenty of pockets',
+      icon: 'vest',
+      type: EquipmentType.BODY,
+      rarity: Rarity.COMMON,
+      price: 100,
+      stats: { coinBonus: 5 },
+      requiredLevel: 1,
+    },
+    {
+      name: 'Productivity Suit',
+      description: 'Gives you an efficient and professional appearance',
+      icon: 'suit',
+      type: EquipmentType.BODY,
+      rarity: Rarity.RARE,
+      price: 400,
+      stats: { coinBonus: 15 },
+      requiredLevel: 7,
+    },
+    {
+      name: 'Legendary Armor of Efficiency',
+      description: 'Made from the scales of the most productive dragons',
+      icon: 'armor',
+      type: EquipmentType.BODY,
+      rarity: Rarity.EPIC,
+      price: 1200,
+      stats: { xpBonus: 10, coinBonus: 20 },
+      requiredLevel: 20,
+    },
+
+    // ACCESORIES
+    {
+      name: 'Focus Stone',
+      description: 'A small stone that helps maintain concentration',
+      icon: 'stone',
+      type: EquipmentType.ACCESSORY,
+      rarity: Rarity.COMMON,
+      price: 50,
+      stats: { xpBonus: 3, coinBonus: 2 },
+      requiredLevel: 1,
+    },
+    {
+      name: 'Time Amulet',
+      description: 'An amulet that helps manage your time more efficiently',
+      icon: 'amulet',
+      type: EquipmentType.ACCESSORY,
+      rarity: Rarity.RARE,
+      price: 250,
+      stats: { xpBonus: 7, coinBonus: 7 },
+      requiredLevel: 5,
+    },
+    {
+      name: 'Infinity Gauntlet of Productivity',
+      description: 'Legendary accessory that maximizes all your capabilities',
+      icon: 'gauntlet',
+      type: EquipmentType.ACCESSORY,
+      rarity: Rarity.EPIC,
+      price: 1500,
+      stats: { xpBonus: 15, coinBonus: 15 },
+      requiredLevel: 25,
+    },
+  ];
   constructor(
     @InjectRepository(Equipment)
     private equipmentRepository: Repository<Equipment>,
@@ -36,6 +134,83 @@ export class ShopService {
     private walletService: WalletService,
     private achievementService: AchievementService,
   ) {}
+
+  /**
+   * This method is called when the module is initialized
+   * Verifies if the equipment catalog is empty
+   * If empty, initializes the equipment catalog with default values
+   */
+  async onModuleInit() {
+    try {
+      // Verificar si ya existe equipamiento en la base de datos
+      const count = await this.equipmentRepository.count();
+
+      // Si no hay equipamiento, inicializarlo
+      if (count === 0) {
+        console.log('Initializing equipment catalog...');
+        await this.initializeEquipment();
+      } else {
+        console.log(`Already existing catalog with ${count} pieces.`);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+
+  /**
+   * Method to initialize the equipment catalog
+   * Creates and saves the default equipment defined in the class
+   */
+  private async initializeEquipment() {
+    try {
+      // Crear y guardar cada pieza de equipamiento definida
+      const equipment = this.equipmentDefinitions.map((def) =>
+        this.equipmentRepository.create(def),
+      );
+
+      await this.equipmentRepository.save(equipment);
+      console.log(`Created ${equipment.length} equipment pieces.`);
+    } catch (error) {
+      console.error('Error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Method to update the equipment catalog
+   * Useful for adding new equipment definitions
+   */
+  async updateEquipmentCatalog() {
+    // Obtener todo el equipamiento existente
+    const existingEquipment = await this.equipmentRepository.find();
+    const existingNames = existingEquipment.map((item) => item.name);
+
+    // Encontrar definiciones que no existen en la base de datos
+    const newDefinitions = this.equipmentDefinitions.filter(
+      (def) => !existingNames.includes(def.name),
+    );
+
+    if (newDefinitions.length === 0) {
+      return {
+        updated: false,
+        message: 'There is no new equipmente pieces.',
+        count: 0,
+      };
+    }
+
+    // Crear y guardar el nuevo equipamiento
+    const newEquipment = newDefinitions.map((def) =>
+      this.equipmentRepository.create(def),
+    );
+
+    await this.equipmentRepository.save(newEquipment);
+
+    return {
+      updated: true,
+      message: `${newEquipment.length} pieces added.`,
+      count: newEquipment.length,
+    };
+  }
 
   /**
    * Creates a new equipment on the store (admin)
