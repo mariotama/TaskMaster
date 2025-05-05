@@ -193,12 +193,12 @@ export class TaskService {
 
       await this.taskCompletionRepository.save(completion);
 
-      // Actualizar misiones como completadas
+      // Update missions as completed
       if (task.type === TaskType.MISSION) {
         await this.taskRepository.update({ id }, { isCompleted: true });
       }
 
-      // Dar XP y monedas
+      // Give XP and coins
       const progressionResult =
         await this.progressionService.addExperienceAndCoins(
           userId,
