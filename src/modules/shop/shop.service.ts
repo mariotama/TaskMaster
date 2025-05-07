@@ -32,7 +32,7 @@ export class ShopService implements OnModuleInit {
     {
       name: 'Basic Cap',
       description: 'A simple cap that provides basic protection',
-      icon: 'hat',
+      icon: 'https://res.cloudinary.com/dgtskm40t/image/upload/v1746638497/ChatGPT_Image_7_may_2025_19_21_17_ychtyx.png',
       type: EquipmentType.HEAD,
       rarity: Rarity.COMMON,
       price: 100,
@@ -42,7 +42,7 @@ export class ShopService implements OnModuleInit {
     {
       name: 'Focus Helmet',
       description: 'Enhances your focus and mental clarity',
-      icon: 'helmet',
+      icon: 'https://res.cloudinary.com/dgtskm40t/image/upload/v1746638497/ChatGPT_Image_7_may_2025_19_21_20_fqeyon.png',
       type: EquipmentType.HEAD,
       rarity: Rarity.RARE,
       price: 300,
@@ -52,7 +52,7 @@ export class ShopService implements OnModuleInit {
     {
       name: 'Crown of Wisdom',
       description: 'A legendary crown that maximizes your productivity',
-      icon: 'crown',
+      icon: 'https://res.cloudinary.com/dgtskm40t/image/upload/v1746638497/ChatGPT_Image_7_may_2025_19_21_21_rsjgvf.png',
       type: EquipmentType.HEAD,
       rarity: Rarity.EPIC,
       price: 1000,
@@ -64,7 +64,7 @@ export class ShopService implements OnModuleInit {
     {
       name: 'Task Vest',
       description: 'A comfortable vest with plenty of pockets',
-      icon: 'vest',
+      icon: 'https://res.cloudinary.com/dgtskm40t/image/upload/v1746639700/ChatGPT_Image_7_may_2025_19_41_29_ew37ze.png',
       type: EquipmentType.BODY,
       rarity: Rarity.COMMON,
       price: 100,
@@ -74,7 +74,7 @@ export class ShopService implements OnModuleInit {
     {
       name: 'Productivity Suit',
       description: 'Gives you an efficient and professional appearance',
-      icon: 'suit',
+      icon: 'https://res.cloudinary.com/dgtskm40t/image/upload/v1746641314/ChatGPT_Image_7_may_2025_20_08_27_ncxdi0.png',
       type: EquipmentType.BODY,
       rarity: Rarity.RARE,
       price: 400,
@@ -84,7 +84,7 @@ export class ShopService implements OnModuleInit {
     {
       name: 'Legendary Armor of Efficiency',
       description: 'Made from the scales of the most productive dragons',
-      icon: 'armor',
+      icon: 'https://res.cloudinary.com/dgtskm40t/image/upload/v1746641415/ChatGPT_Image_7_may_2025_20_10_06_kcn7xe.png',
       type: EquipmentType.BODY,
       rarity: Rarity.EPIC,
       price: 1200,
@@ -96,7 +96,7 @@ export class ShopService implements OnModuleInit {
     {
       name: 'Focus Stone',
       description: 'A small stone that helps maintain concentration',
-      icon: 'stone',
+      icon: 'https://res.cloudinary.com/dgtskm40t/image/upload/v1746641557/ChatGPT_Image_7_may_2025_20_12_29_jupmav.png',
       type: EquipmentType.ACCESSORY,
       rarity: Rarity.COMMON,
       price: 50,
@@ -106,7 +106,7 @@ export class ShopService implements OnModuleInit {
     {
       name: 'Time Amulet',
       description: 'An amulet that helps manage your time more efficiently',
-      icon: 'amulet',
+      icon: 'https://res.cloudinary.com/dgtskm40t/image/upload/v1746641690/ChatGPT_Image_7_may_2025_20_14_41_cur2wn.png',
       type: EquipmentType.ACCESSORY,
       rarity: Rarity.RARE,
       price: 250,

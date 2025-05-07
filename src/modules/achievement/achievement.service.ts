@@ -86,10 +86,10 @@ export class AchievementService implements OnModuleInit {
     },
     {
       type: 'EQUIPMENT',
-      count: 15,
+      count: 9,
       name: 'Armory',
-      description: 'Adquiere pieces of equipment',
-      icon: 'equipment-15',
+      description: 'Buy 9 pieces of equipment',
+      icon: 'equipment-9',
     },
   ];
 
