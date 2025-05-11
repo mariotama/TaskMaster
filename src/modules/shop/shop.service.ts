@@ -116,7 +116,7 @@ export class ShopService implements OnModuleInit {
     {
       name: 'Infinity Gauntlet of Productivity',
       description: 'Legendary accessory that maximizes all your capabilities',
-      icon: 'gauntlet',
+      icon: 'https://res.cloudinary.com/dgtskm40t/image/upload/v1746976055/ChatGPT_Image_11_may_2025_17_06_43_y99jmm.png',
       type: EquipmentType.ACCESSORY,
       rarity: Rarity.EPIC,
       price: 1500,
