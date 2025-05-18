@@ -46,6 +46,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService): TypeOrmModuleOptions => {
+        // Railway proporciona DATABASE_URL
         const databaseUrl = configService.get<string>('DATABASE_URL');
 
         if (databaseUrl) {
@@ -53,14 +54,14 @@ import { ScheduleModule } from '@nestjs/schedule';
             type: 'postgres',
             url: databaseUrl,
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
-            synchronize: configService.get('NODE_ENV') !== 'development',
+            synchronize: configService.get('NODE_ENV') !== 'production',
             ssl:
-              configService.get('NODE_ENV') === 'development'
+              configService.get('NODE_ENV') === 'production'
                 ? {
                     rejectUnauthorized: false,
                   }
                 : false,
-            logging: configService.get('NODE_ENV') !== 'development',
+            logging: configService.get('NODE_ENV') !== 'production',
           } as TypeOrmModuleOptions;
         }
 
