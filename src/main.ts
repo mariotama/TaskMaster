@@ -8,12 +8,16 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import { setupSwagger } from './common/swagger/swagger.config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['log', 'error', 'warn', 'debug', 'verbose'],
+  });
+
   const configService = app.get(ConfigService);
 
   app.use(
     helmet({
       crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: false,
     }),
   );
 
@@ -21,13 +25,15 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:4200',
-      process.env.FRONTEND_URL || '*',
-      /\.railway\.app$/,
-      /\.vercel\.app$/,
-    ],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+      /^https:\/\/.*\.railway\.app$/,
+      /^https:\/\/.*\.vercel\.app$/,
+      /^https:\/\/.*\.netlify\.app$/,
+      process.env.FRONTEND_URL,
+    ].filter(Boolean),
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    exposedHeaders: ['Authorization'],
   });
 
   // Global prefix for api
@@ -51,11 +57,24 @@ async function bootstrap() {
   // Global interceptors
   app.useGlobalInterceptors(new TransformInterceptor());
 
-  // Config Swagger for documentation
-  setupSwagger(app);
+  // Config Swagger for documentation - just development
+  if (process.env.NODE_ENV !== 'production') {
+    setupSwagger(app);
+  }
 
   // Init server
   const port = process.env.PORT || configService.get<number>('PORT', 3000);
+
   await app.listen(port, '0.0.0.0');
+
+  console.log(`🚀 Application running on port ${port}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`📚 Documentation: http://localhost:${port}/api/docs`);
+  }
 }
-bootstrap();
+bootstrap().catch((error) => {
+  console.error('Error starting the application:', error);
+  process.exit(1);
+});

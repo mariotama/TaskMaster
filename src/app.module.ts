@@ -5,7 +5,7 @@ import {
   RequestMethod,
 } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
@@ -30,14 +30,19 @@ import { ScheduleModule } from '@nestjs/schedule';
           .valid('development', 'production', 'test')
           .default('development'),
         PORT: Joi.number().default(3000),
+        // Railway PostgreSQL
+        DATABASE_URL: Joi.string().optional(),
+        // Fallback para desarrollo local
         DB_HOST: Joi.string().default('localhost'),
         DB_PORT: Joi.number().default(5432),
         DB_USERNAME: Joi.string().default('postgres'),
         DB_PASSWORD: Joi.string().default('postgres'),
         DB_NAME: Joi.string().default('taskmaster'),
+        // JWT
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRATION: Joi.string().default('1d'),
-        FRONTEND_URL: Joi.string().default('*'),
+        // Frontend
+        FRONTEND_URL: Joi.string().optional(),
       }),
     }),
 
@@ -45,38 +50,46 @@ import { ScheduleModule } from '@nestjs/schedule';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService): TypeOrmModuleOptions => {
-        // Railway proporciona DATABASE_URL
-        const databaseUrl = configService.get<string>('DATABASE_URL');
+      useFactory: (configService: ConfigService) => {
+        const isProduction = configService.get('NODE_ENV') === 'production';
+        const databaseUrl: string | undefined =
+          configService.get<string>('DATABASE_URL');
+
+        console.log('🔧 Configuring database...');
+        console.log('Environment:', configService.get('NODE_ENV'));
+        console.log('Has DATABASE_URL:', !!databaseUrl);
 
         if (databaseUrl) {
+          // Configuración para Railway (production)
           return {
-            type: 'postgres',
+            type: 'postgres' as const,
             url: databaseUrl,
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
-            synchronize: configService.get('NODE_ENV') !== 'production',
-            ssl:
-              configService.get('NODE_ENV') === 'production'
-                ? {
+            synchronize: !isProduction, // Solo en desarrollo
+            logging: !isProduction,
+            ssl: isProduction ? { rejectUnauthorized: false } : false,
+            extra: isProduction
+              ? {
+                  ssl: {
                     rejectUnauthorized: false,
-                  }
-                : false,
-            logging: configService.get('NODE_ENV') !== 'production',
-          } as TypeOrmModuleOptions;
+                  },
+                }
+              : {},
+          };
+        } else {
+          // Configuración para desarrollo local
+          return {
+            type: 'postgres' as const,
+            host: configService.get<string>('DB_HOST', 'localhost'),
+            port: configService.get<number>('DB_PORT', 5432),
+            username: configService.get<string>('DB_USERNAME', 'postgres'),
+            password: configService.get<string>('DB_PASSWORD', 'postgres'),
+            database: configService.get<string>('DB_NAME', 'taskmaster'),
+            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            synchronize: true,
+            logging: true,
+          };
         }
-
-        // Fallback para desarrollo local
-        return {
-          type: 'postgres',
-          host: configService.get('DB_HOST', 'localhost'),
-          port: configService.get<number>('DB_PORT', 5432),
-          username: configService.get('DB_USERNAME', 'postgres'),
-          password: configService.get('DB_PASSWORD', 'postgres'),
-          database: configService.get('DB_NAME', 'taskmaster'),
-          entities: [__dirname + '/**/*.entity{.ts,.js}'],
-          synchronize: configService.get('NODE_ENV') !== 'production',
-          logging: configService.get('NODE_ENV') !== 'production',
-        } as TypeOrmModuleOptions;
       },
     }),
 
