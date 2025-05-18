@@ -30,11 +30,11 @@ import { ScheduleModule } from '@nestjs/schedule';
           .valid('development', 'production', 'test')
           .default('development'),
         PORT: Joi.number().default(3000),
-        DB_HOST: Joi.string().default('localhost'),
+        DB_HOST: Joi.string().default('process.env.DB_HOST'),
         DB_PORT: Joi.number().default(5432),
-        DB_USERNAME: Joi.string().default('postgres'),
-        DB_PASSWORD: Joi.string().default('postgres'),
-        DB_NAME: Joi.string().default('taskmaster'),
+        DB_USERNAME: Joi.string().default('process.env.DB_USERNAME'),
+        DB_PASSWORD: Joi.string().default('process.env.DB_PASSWORD'),
+        DB_NAME: Joi.string().default('process.env.DB_DATABASE'),
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRATION: Joi.string().default('1d'),
         FRONTEND_URL: Joi.string().default('*'),
@@ -57,7 +57,6 @@ import { ScheduleModule } from '@nestjs/schedule';
         logging: configService.get('NODE_ENV') !== 'production',
       }),
     }),
-
     // App modules
     CommonModule,
     AuthModule,
