@@ -30,13 +30,15 @@ import { ScheduleModule } from '@nestjs/schedule';
           .valid('development', 'production', 'test')
           .default('development'),
         PORT: Joi.number().default(3000),
-        DB_HOST: Joi.string().default('process.env.DB_HOST'),
+        DB_HOST: Joi.string().required(),
         DB_PORT: Joi.number().default(5432),
-        DB_USERNAME: Joi.string().default('process.env.DB_USERNAME'),
-        DB_PASSWORD: Joi.string().default('process.env.DB_PASSWORD'),
-        DB_NAME: Joi.string().default('process.env.DB_DATABASE'),
+        DB_USERNAME: Joi.string().required(),
+        DB_PASSWORD: Joi.string().required(),
+        DB_NAME: Joi.string().required(),
+
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRATION: Joi.string().default('1d'),
+
         FRONTEND_URL: Joi.string().default('*'),
       }),
     }),
