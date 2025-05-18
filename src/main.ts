@@ -11,14 +11,23 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
-  // Helmet for HTTP security
-  app.use(helmet());
+  app.use(
+    helmet({
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
 
   // CORS for frontend
   app.enableCors({
-    //origin: configService.get('FRONTEND_URL', '*'),
+    origin: [
+      'http://localhost:4200',
+      process.env.FRONTEND_URL || '*',
+      /\.railway\.app$/,
+      /\.vercel\.app$/,
+    ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // Global prefix for api
@@ -46,9 +55,7 @@ async function bootstrap() {
   setupSwagger(app);
 
   // Init server
-  const port = configService.get<number>('PORT', 3000);
-  await app.listen(port);
-  console.log(`Aplicación ejecutándose en: http://localhost:${port}`);
-  console.log(`Documentación disponible en: http://localhost:${port}/api/docs`);
+  const port = process.env.PORT || configService.get<number>('PORT', 3000);
+  await app.listen(port, '0.0.0.0');
 }
 bootstrap();

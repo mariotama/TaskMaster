@@ -1,0 +1,10 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+healthcheckPath = "/api/v1"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+
+[app]
+start = "npm run start:prod"
