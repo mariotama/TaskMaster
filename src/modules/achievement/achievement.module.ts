@@ -14,7 +14,6 @@ import { AuthModule } from '../auth/auth.module';
   imports: [
     TypeOrmModule.forFeature([Achievement]),
 
-    // Use forwardRef for modules to avoid circular dependencies
     forwardRef(() => UserModule),
     forwardRef(() => WalletModule),
     forwardRef(() => TaskModule),

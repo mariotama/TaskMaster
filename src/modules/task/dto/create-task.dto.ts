@@ -29,13 +29,13 @@ export class CreateTaskDto {
 
   @IsNumber()
   @Min(1, { message: 'XP reward must be at least 1' })
-  @Max(1000, { message: `XP reward can't exceed 1000` })
+  @Max(100, { message: `XP reward can't exceed 100` })
   @IsNotEmpty({ message: 'XP reward is mandatory' })
   xpReward: number;
 
   @IsNumber()
   @Min(0, { message: `Coin reward can't be negative` })
-  @Max(500, { message: `Coin reward can't exceed 500` })
+  @Max(50, { message: `Coin reward can't exceed 50` })
   @IsNotEmpty({ message: 'Coin reward is mandatory' })
   coinReward: number;
 
